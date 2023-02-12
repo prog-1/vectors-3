@@ -71,18 +71,18 @@ func (g *Game) Update() error {
 
 func (g *Game) NewCircle() {
 	x, y := rand.Intn(sWidth), rand.Intn(sHeight)
-	v1 := point{g.b.x - g.a.x, g.b.y - g.a.y}
-	v2 := point{g.d.x - g.c.x, g.d.y - g.c.y}
-	q1 := (x-g.a.x)*v1.y - (y-g.a.y)*v1.x
-	q2 := (x-g.c.x)*v2.y - (y-g.c.y)*v2.x
+	p1 := point{g.b.x - g.a.x, g.b.y - g.a.y}
+	p2 := point{g.d.x - g.c.x, g.d.y - g.c.y}
+	u1 := (x-g.a.x)*p1.y - (y-g.a.y)*p1.x
+	u2 := (x-g.c.x)*p2.y - (y-g.c.y)*p2.x
 
-	if q1 > 0 && q2 > 0 {
+	if u1 > 0 && u2 > 0 {
 		g.img.Set(x, y, color.RGBA{0xDC, 14, 0x3C, 255})
-	} else if q1 < 0 && q2 > 0 {
+	} else if u1 < 0 && u2 > 0 {
 		g.img.Set(x, y, color.RGBA{0x2E, 0xff, 0x2E, 255})
-	} else if q1 > 0 && q2 < 0 {
+	} else if u1 > 0 && u2 < 0 {
 		g.img.Set(x, y, color.RGBA{0xff, 0xff, 0xff, 255})
-	} else if q1 < 0 && q2 < 0 {
+	} else if u1 < 0 && u2 < 0 {
 		g.img.Set(x, y, color.RGBA{0xff, 0xA5, 0, 255})
 	}
 }

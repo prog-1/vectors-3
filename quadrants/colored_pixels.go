@@ -84,10 +84,10 @@ func (g *Game) randomPixel(width, height int) *pixel {
 func mathStuff(x, y, x1, y1, x2, y2 float64) float64 {
 	dy := y2 - y1
 	dx := x2 - x1
-	A1 := -dy
-	B1 := dx
-	C1 := dy*x1 - dx*y1
-	return A1*x + B1*y + C1
+	A := -dy
+	B := dx
+	C := dy*x1 - dx*y1
+	return A*x + B*y + C
 }
 
 //---------------------------Main-------------------------------------

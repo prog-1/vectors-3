@@ -77,8 +77,10 @@ func (g *Game) randomPixel(width, height int) *pixel {
 
 	//set the pixel color depending on normals
 	if nrm1 > 0 && nrm2 > 0 && nrm3 > 0 && nrm4 > 0 && nrm5 > 0 && nrm6 > 0 {
+		// all normals are positive => pixel is inside
 		color = g.green
 	} else {
+		//if at least 1 normal is negative => pixel is outside
 		color = g.red
 	}
 
@@ -89,10 +91,10 @@ func (g *Game) randomPixel(width, height int) *pixel {
 func formula(x, y, x1, y1, x2, y2 float64) float64 {
 	dy := y2 - y1
 	dx := x2 - x1
-	A1 := -dy
-	B1 := dx
-	C1 := dy*x1 - dx*y1
-	return A1*x + B1*y + C1
+	A := -dy
+	B := dx
+	C := dy*x1 - dx*y1
+	return A*x + B*y + C
 }
 
 //---------------------------Main-------------------------------------

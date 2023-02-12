@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type vector struct {
@@ -19,11 +17,15 @@ type line struct {
 	a, b vector
 }
 
-func (l line) normalFormula(a vector) int {
+func (l *line) normalFormula(a vector) int {
 	x, y := a.x, a.y
 	dx, dy := l.b.x-l.a.x, l.b.y-l.a.y
 	A, B, C := -dy, dx, dy*l.a.x-dx*l.a.y
 	return A*x + B*y + C
+}
+
+func (l *line) draw(screen *ebiten.Image) {
+	DrawLine(screen, l.a.x, l.a.y, l.b.x, l.b.y, color.RGBA{1, 100, 100, 255})
 }
 
 const (
@@ -32,7 +34,7 @@ const (
 )
 
 type game struct {
-	l1, l2 line
+	l      []line
 	p      vector
 	buffer *ebiten.Image
 }
@@ -42,23 +44,24 @@ func (g *game) Update() error {
 	g.p = vector{rand.Intn(screenWidth + 1), rand.Intn(screenHeight + 1)}
 	return nil
 }
-
 func (g *game) Draw(screen *ebiten.Image) {
-	DrawLine(g.buffer, g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, color.RGBA{1, 100, 100, 255})
-	DrawLine(g.buffer, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y, color.RGBA{100, 100, 255, 255})
-	ebitenutil.DebugPrint(g.buffer, fmt.Sprintf("l1: a(%v, %v) b(%v, %v)    l2: a(%v, %v) b(%v, %v)", g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y))
-	n1, n2 := g.l1.normalFormula(g.p), g.l2.normalFormula(g.p)
+	//g.p = vector{300, 800}
+	for _, l := range g.l {
+		l.draw(g.buffer)
+	}
+
+	n1 := g.l[0].normalFormula(g.p)
+	n2 := g.l[1].normalFormula(g.p)
+	n3 := g.l[2].normalFormula(g.p)
+	n4 := g.l[3].normalFormula(g.p)
 
 	var clr color.Color
-	if n1 > 0 && n2 > 0 {
-		clr = color.RGBA{0, 255, 0, 255}
-	} else if n1 > 0 {
-		clr = color.RGBA{255, 0, 0, 255}
-	} else if n2 > 0 {
-		clr = color.RGBA{255, 255, 255, 255}
+	if n1 > 0 && n2 > 0 && n3 > 0 && n4 > 0 {
+		clr = color.RGBA{0, 255, 255, 255}
 	} else {
 		clr = color.RGBA{255, 165, 0, 255}
 	}
+
 	g.buffer.Set(g.p.x, g.p.y, clr)
 
 	screen.DrawImage(g.buffer, &ebiten.DrawImageOptions{})
@@ -70,25 +73,16 @@ func main() {
 	g := &game{}
 	g.buffer = ebiten.NewImage(screenWidth, screenHeight)
 
-	halfScreenWidth, halfScreenHeight := screenWidth/2, screenHeight/2
+	g.l = make([]line, 4)
+	// g.l[0] = line{vector{200, 1000}, vector{200, 200}}                // left
+	// g.l[1] = line{vector{200, 200}, vector{1000, 200}}                // top
+	// g.l[2] = line{vector{1000, 200}, vector{screenWidth - 200, 1000}} // right
+	// g.l[3] = line{vector{screenWidth - 200, 1000}, vector{200, 1000}} // bottom
 
-	d1 := rand.Float32()
-	if d1 > 0.5 {
-		g.l1.a = vector{rand.Intn(halfScreenWidth), 0}
-		g.l1.b = vector{halfScreenWidth + rand.Intn(halfScreenWidth), screenHeight}
-	} else {
-		g.l1.a = vector{0, rand.Intn(screenHeight)}
-		g.l1.b = vector{screenWidth, halfScreenHeight + rand.Intn(halfScreenHeight)}
-	}
-
-	d2 := rand.Float32()
-	if d2 > 0.5 {
-		g.l2.a = vector{halfScreenWidth + rand.Intn(halfScreenWidth), 0}
-		g.l2.b = vector{rand.Intn(halfScreenWidth), screenHeight}
-	} else {
-		g.l2.a = vector{screenWidth, rand.Intn(halfScreenHeight)}
-		g.l2.b = vector{0, halfScreenHeight + rand.Intn(halfScreenHeight)}
-	}
+	g.l[0] = line{vector{100, screenHeight - 50}, vector{140, screenHeight / 2}}                                   // left
+	g.l[1] = line{vector{140, screenHeight / 2}, vector{screenWidth/2 + 100, screenHeight / 2}}                    // top
+	g.l[2] = line{vector{screenWidth/2 + 100, screenHeight / 2}, vector{screenWidth/2 + 140, screenHeight/2 + 60}} // right
+	g.l[3] = line{vector{screenWidth/2 + 140, screenHeight/2 + 60}, vector{100, screenHeight - 50}}                // bottom
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

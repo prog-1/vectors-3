@@ -18,10 +18,10 @@ const (
 )
 
 type Game struct {
-	width, height             int
-	a, b, c, d                point
-	pixels                    []*pixel
-	red, green, white, orange color.RGBA
+	width, height    int
+	a, b, c, d, e, f point
+	pixels           []*pixel
+	red, green       color.RGBA
 }
 
 type point struct {
@@ -48,9 +48,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		screen.Set(int(p.x), int(p.y), p.color)
 	}
 
-	//Random Lines - draw lines after pixels to draw them above all pixels
+	//drawing hexagon!
 	ebitenutil.DrawLine(screen, g.a.x, g.a.y, g.b.x, g.b.y, color.RGBA{255, 255, 255, 255})
+	ebitenutil.DrawLine(screen, g.b.x, g.b.y, g.c.x, g.c.y, color.RGBA{255, 255, 255, 255})
 	ebitenutil.DrawLine(screen, g.c.x, g.c.y, g.d.x, g.d.y, color.RGBA{255, 255, 255, 255})
+	ebitenutil.DrawLine(screen, g.d.x, g.d.y, g.e.x, g.e.y, color.RGBA{255, 255, 255, 255})
+	ebitenutil.DrawLine(screen, g.e.x, g.e.y, g.f.x, g.f.y, color.RGBA{255, 255, 255, 255})
+	ebitenutil.DrawLine(screen, g.f.x, g.f.y, g.a.x, g.a.y, color.RGBA{255, 255, 255, 255})
 }
 
 //-------------------------Functions----------------------------------
@@ -63,25 +67,26 @@ func (g *Game) randomPixel(width, height int) *pixel {
 	x := float64(rand.Intn(width))
 	y := float64(rand.Intn(height))
 
-	nrm1 := mathStuff(x, y, g.a.x, g.a.y, g.b.x, g.b.y) //first formula result/normal
-	nrm2 := mathStuff(x, y, g.c.x, g.c.y, g.d.x, g.d.y) //second formula result/normal
+	//line normals
+	nrm1 := formula(x, y, g.a.x, g.a.y, g.b.x, g.b.y)
+	nrm2 := formula(x, y, g.b.x, g.b.y, g.c.x, g.c.y)
+	nrm3 := formula(x, y, g.c.x, g.c.y, g.d.x, g.d.y)
+	nrm4 := formula(x, y, g.d.x, g.d.y, g.e.x, g.e.y)
+	nrm5 := formula(x, y, g.e.x, g.e.y, g.f.x, g.f.y)
+	nrm6 := formula(x, y, g.f.x, g.f.y, g.a.x, g.a.y)
 
-	//set the color depending on both formula result signs
-	if nrm1 > 0 && nrm2 >= 0 {
-		color = g.red
-	} else if nrm1 > 0 && nrm2 <= 0 {
+	//set the pixel color depending on normals
+	if nrm1 > 0 && nrm2 > 0 && nrm3 > 0 && nrm4 > 0 && nrm5 > 0 && nrm6 > 0 {
 		color = g.green
-	} else if nrm1 < 0 && nrm2 >= 0 {
-		color = g.white
-	} else /* s1 < 0 && s2 <= 0 */ {
-		color = g.orange
+	} else {
+		color = g.red
 	}
 
 	return &pixel{x, y, color} //return pixel with random coordinates and according color
 }
 
 //returns result of the normal formula of the line
-func mathStuff(x, y, x1, y1, x2, y2 float64) float64 {
+func formula(x, y, x1, y1, x2, y2 float64) float64 {
 	dy := y2 - y1
 	dx := x2 - x1
 	A1 := -dy
@@ -101,7 +106,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano()) //seed for random
 
 	ebiten.SetWindowSize(sW, sH)
-	ebiten.SetWindowTitle("Colored Pixels!")
+	ebiten.SetWindowTitle("Hexagon!")
 	ebiten.SetWindowResizable(true) //enablening window resizes
 
 	//running game
@@ -114,17 +119,18 @@ func main() {
 func NewGame(width, height int) *Game {
 
 	//All pre-declared stuff is stored here
-	var a, b, c, d point
-	a.x, a.y = float64(rand.Intn(sW)), 0
-	b.x, b.y = float64(rand.Intn(sW)), sH
-	c.x, c.y = 0, float64(rand.Intn(sH))
-	d.x, d.y = sW, float64(rand.Intn(sH))
+	var a, b, c, d, e, f point
+	a.x, a.y = (sW / 2), (sH/2)+100
+	b.x, b.y = (sW/2)-100, (sH/2)+50
+	c.x, c.y = (sW/2)-100, (sH/2)-50
+	d.x, d.y = (sW / 2), (sH/2)-100
+	e.x, e.y = (sW/2)+100, (sH/2)-50
+	f.x, f.y = (sW/2)+100, (sH/2)+50
+
 	red := color.RGBA{255, 100, 100, 255}
 	green := color.RGBA{100, 255, 100, 255}
-	white := color.RGBA{255, 255, 255, 255}
-	orange := color.RGBA{200, 165, 0, 255}
 
 	//creating and returning game instance
-	return &Game{sW, sH, a, b, c, d, nil, red, green, white, orange}
+	return &Game{sW, sH, a, b, c, d, e, f, nil, red, green}
 
 }

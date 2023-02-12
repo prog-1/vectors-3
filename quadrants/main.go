@@ -19,23 +19,42 @@ type line struct {
 	a, b vector
 }
 
+func (l line) normalFormula(a vector) int {
+	x, y := a.x, a.y
+	dx, dy := l.a.x-l.b.x, l.a.y-l.b.y
+	A, B, C := -dy, dx, dy*l.a.x-dx*l.a.y
+	return A*x + B*y + C
+}
+
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 1920
+	screenHeight = 1080
 )
 
 type game struct {
 	l1, l2 line
+	p      vector
 }
 
 func (g *game) Layout(outWidth, outHeight int) (w, h int) { return screenWidth, screenHeight }
 func (g *game) Update() error {
+	g.p = vector{rand.Intn(screenWidth + 1), rand.Intn(screenHeight + 1)}
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
 	DrawLine(screen, g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, color.RGBA{1, 100, 100, 255})
 	DrawLine(screen, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y, color.RGBA{100, 100, 255, 255})
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("l1: a(%v, %v) b(%v, %v)    l2: a(%v, %v) b(%v, %v)", g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y))
+	n1, n2 := g.l1.normalFormula(g.p), g.l2.normalFormula(g.p)
+	if n1 > 0 && n2 > 0 {
+		screen.Set(g.p.x, g.p.y, color.RGBA{0, 255, 0, 255})
+	} else if n1 < 0 {
+		screen.Set(g.p.x, g.p.y, color.RGBA{255, 0, 0, 255})
+	} else if n2 < 0 {
+		screen.Set(g.p.x, g.p.y, color.RGBA{255, 255, 255, 255})
+	} else {
+		screen.Set(g.p.x, g.p.y, color.RGBA{255, 165, 0, 255})
+	}
 }
 
 func main() {

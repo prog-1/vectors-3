@@ -34,6 +34,7 @@ const (
 type game struct {
 	l1, l2 line
 	p      vector
+	buffer *ebiten.Image
 }
 
 func (g *game) Layout(outWidth, outHeight int) (w, h int) { return screenWidth, screenHeight }
@@ -42,25 +43,27 @@ func (g *game) Update() error {
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
-	DrawLine(screen, g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, color.RGBA{1, 100, 100, 255})
-	DrawLine(screen, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y, color.RGBA{100, 100, 255, 255})
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("l1: a(%v, %v) b(%v, %v)    l2: a(%v, %v) b(%v, %v)", g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y))
+	DrawLine(g.buffer, g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, color.RGBA{1, 100, 100, 255})
+	DrawLine(g.buffer, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y, color.RGBA{100, 100, 255, 255})
+	ebitenutil.DebugPrint(g.buffer, fmt.Sprintf("l1: a(%v, %v) b(%v, %v)    l2: a(%v, %v) b(%v, %v)", g.l1.a.x, g.l1.a.y, g.l1.b.x, g.l1.b.y, g.l2.a.x, g.l2.a.y, g.l2.b.x, g.l2.b.y))
 	n1, n2 := g.l1.normalFormula(g.p), g.l2.normalFormula(g.p)
 	if n1 > 0 && n2 > 0 {
-		screen.Set(g.p.x, g.p.y, color.RGBA{0, 255, 0, 255})
-	} else if n1 < 0 {
-		screen.Set(g.p.x, g.p.y, color.RGBA{255, 0, 0, 255})
-	} else if n2 < 0 {
-		screen.Set(g.p.x, g.p.y, color.RGBA{255, 255, 255, 255})
+		g.buffer.Set(g.p.x, g.p.y, color.RGBA{0, 255, 0, 255})
+	} else if n1 > 0 {
+		g.buffer.Set(g.p.x, g.p.y, color.RGBA{255, 0, 0, 255})
+	} else if n2 > 0 {
+		g.buffer.Set(g.p.x, g.p.y, color.RGBA{255, 255, 255, 255})
 	} else {
-		screen.Set(g.p.x, g.p.y, color.RGBA{255, 165, 0, 255})
+		g.buffer.Set(g.p.x, g.p.y, color.RGBA{255, 165, 0, 255})
 	}
+	screen.DrawImage(g.buffer, &ebiten.DrawImageOptions{})
 }
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	g := &game{}
+	g.buffer = ebiten.NewImage(screenWidth, screenHeight)
 
 	halfScreenWidth, halfScreenHeight := screenWidth/2, screenHeight/2
 
